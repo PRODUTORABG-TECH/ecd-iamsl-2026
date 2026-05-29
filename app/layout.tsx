@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ECD 2026 – Inscrição",
-  description: "Encontro de Casais e Desafios 2026 – Faça sua inscrição",
+  title: "Encontro com Deus 2026",
+  description: "Igreja Monte Sião Linhares",
 };
 
 export default function RootLayout({

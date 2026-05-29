@@ -99,7 +99,7 @@ export default function InscricaoPage() {
     saveSession({ step, name, phone, validatedPhone, form });
   }, [step, name, phone, validatedPhone, form]);
 
-  async function handleRequestOtp(e: React.FormEvent) {
+  async function handleRequestOtp(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -125,7 +125,7 @@ export default function InscricaoPage() {
     }
   }
 
-  async function handleValidateOtp(e: React.FormEvent) {
+  async function handleValidateOtp(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -152,7 +152,7 @@ export default function InscricaoPage() {
     }
   }
 
-  async function handleSubmitForm(e: React.FormEvent) {
+  async function handleSubmitForm(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -309,7 +309,7 @@ function PhoneStep({
   loading: boolean;
   onNameChange: (v: string) => void;
   onPhoneChange: (v: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
 }) {
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -359,7 +359,7 @@ function OtpStep({
   otp: string;
   loading: boolean;
   onOtpChange: (v: string) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
   onBack: () => void;
 }) {
   return (
@@ -412,7 +412,7 @@ function MainForm({
   phone: string;
   loading: boolean;
   onChange: (field: keyof FormData, value: string | boolean) => void;
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
 }) {
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -591,9 +591,14 @@ function MainForm({
           className="text-sm text-gray-600 cursor-pointer leading-snug"
         >
           Li e concordo com os{" "}
-          <span className="text-blue-600 underline underline-offset-2">
+          <a
+            href="/termos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
+          >
             termos e condições
-          </span>{" "}
+          </a>{" "}
           do evento.
         </label>
       </div>

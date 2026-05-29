@@ -1,6 +1,6 @@
 export default function ObrigadoPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-950 to-indigo-900 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#fdf1e6] flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-2xl p-10 max-w-md w-full text-center">
         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-5">
           <svg
@@ -18,7 +18,7 @@ export default function ObrigadoPage() {
           Sua vaga no <strong>ECD 2026</strong> está garantida. Em breve você receberá mais
           informações via WhatsApp. Fique de olho nas mensagens!
         </p>
-        <div className="mt-6 text-xs text-gray-400">Encontro de Casais e Desafios 2026</div>
+        <div className="mt-6 text-xs text-gray-400">Encontro com Deus 2026</div>
       </div>
     </div>
   );
