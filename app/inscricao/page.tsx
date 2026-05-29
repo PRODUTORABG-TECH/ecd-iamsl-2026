@@ -203,8 +203,8 @@ export default function InscricaoPage() {
     <div className="min-h-screen bg-[#fdf1e6] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-black">ECD 2026</h1>
-          <p className="text-black mt-1 text-sm">Encontro com Deus</p>
+          <h1 className="text-3xl font-bold text-black">Encontro com Deus 2026</h1>
+          <p className="text-black mt-1 text-sm">Igreja Monte Sião Linhares</p>
           <StepIndicator step={step} />
         </div>
 
