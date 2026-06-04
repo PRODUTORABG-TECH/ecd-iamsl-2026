@@ -16,6 +16,8 @@ export default function ObrigadoErroPage({
   const status = searchParams?.status;
   const preference_id = searchParams?.preference_id
 
+  console.log(searchParams)
+
   // 2. Verifica se a pessoa abandonou o checkout (volta pra loja sem pagar)
   const foiAbandono = !paymentId || paymentId === "null" || status === "null";
 
@@ -42,7 +44,7 @@ export default function ObrigadoErroPage({
             </p>
             
             {/* Altere o "/" para o link da sua página inicial de inscrição se for diferente */}
-            <Link href={preference_id?`https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preference_id}`:"/"} className="block w-full mt-2">
+            <Link href={preference_id ? `https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=${preference_id}`: "/"} className="block w-full mt-2">
               <button className="w-full flex items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-3.5 text-white font-semibold text-sm transition-all hover:bg-orange-600 active:scale-[0.98]">
                 Tentar Pagar Novamente
               </button>
