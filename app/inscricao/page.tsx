@@ -99,7 +99,7 @@ export default function InscricaoPage() {
     alergias: "",
     aceite_termos: false,
     cupom: "",
-    metodo_pagamento: ""
+    metodo_pagamento: "pix"
   });
 
 
