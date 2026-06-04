@@ -15,7 +15,7 @@ export default function ObrigadoPage() {
         </div>
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Inscrição Confirmada!</h1>
         <p className="text-gray-500 text-sm leading-relaxed">
-          Sua vaga no <strong>ECD 2026</strong> está garantida. Em breve você receberá mais
+          Sua vaga no <strong>Encontro com Deus 2026 | Monte Sião Linhares </strong> está garantida. Em breve você receberá mais
           informações via WhatsApp. Fique de olho nas mensagens!
         </p>
         <div className="mt-6 text-xs text-gray-400">Encontro com Deus 2026</div>

@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export const metadata = {
   title: "Pendente - Encontro com Deus 2026",
   description: "Pagamento pendente para o Encontro com Deus 2026.",
@@ -18,20 +20,27 @@ export default function ObrigadoPendentePage() {
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M12 8v4l3 3"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 19.5A7.5 7.5 0 114.5 12 7.509 7.509 0 0112 19.5z"
+              d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
+          
         </div>
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Inscrição Pendente</h1>
         <p className="text-gray-500 text-sm leading-relaxed">
           Recebemos sua solicitação, mas ainda aguardamos a confirmação do pagamento.
-          Verifique os dados do boleto ou comprovante e finalize o processo.
         </p>
+         <div className="mt-6 text-sm text-gray-700">
+          <p className="font-semibold mb-2">em caso de duvidas contate a equipe:</p>
+          <Link
+            rel="stylesheet"
+            className="mt-2"
+            href="https://wa.me/5527997558607?text=Tive%20um%20problema%20ao%20realizar%20meu%20cadastro%20no%20Encontro%20com%20Deus%202026%20e%20preciso%20de%20ajuda%20para%20corrigir%20as%20informa%C3%A7%C3%B5es."
+          >
+            <button className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-white font-semibold text-sm transition-all hover:bg-blue-700 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100">
+              Bruna Ramos
+            </button>
+          </Link>
+        </div>
         <div className="mt-6 text-xs text-gray-400">Encontro com Deus 2026</div>
       </div>
     </div>

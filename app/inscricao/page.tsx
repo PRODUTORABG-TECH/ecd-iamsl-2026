@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 
 const API_BASE = "https://n8n.produtorabg.com/webhook";
 
-type Step = "phone" | "otp" | "form";
+type Step = "phone" | "otp" | "form" | "payment";
 
 interface FormData {
   nome_completo: string;
@@ -13,12 +13,28 @@ interface FormData {
   telefone_familiar: string;
   idade: string;
   sexo_biologico: string;
-  tipo_ingresso: string;
+  id_ingresso: string;
   restricoes_alimentares: string;
   restricoes_outro: string;
   alergias: string;
   aceite_termos: boolean;
   cupom: string;
+  metodo_pagamento: string;
+}
+
+interface Ticket {
+  id_ingresso: string;
+  nome_ingresso: string;
+  desc_ingresso:string;
+  valor_cartao: number;
+  valor_pix: number;
+  max_parcelas_cartao: number;
+}
+
+interface CupomState {
+  valido: boolean | null;
+  desconto: number;
+  mensagem: string;
 }
 
 function formatPhone(value: string): string {
@@ -77,12 +93,22 @@ export default function InscricaoPage() {
     telefone_familiar: "",
     idade: "",
     sexo_biologico: "",
-    tipo_ingresso: "",
+    id_ingresso: "",
     restricoes_alimentares: "",
     restricoes_outro: "",
     alergias: "",
     aceite_termos: false,
     cupom: "",
+    metodo_pagamento: ""
+  });
+
+
+  const [ingressos, setIngressos] = useState<Ticket[]>([]);
+  const [precosLoading, setPrecosLoading] = useState(true);
+  const [cupomState, setCupomState] = useState<CupomState>({ 
+    valido: null, 
+    desconto: 0, 
+    mensagem: "" 
   });
 
   useEffect(() => {
@@ -98,6 +124,28 @@ export default function InscricaoPage() {
   useEffect(() => {
     saveSession({ step, name, phone, validatedPhone, form });
   }, [step, name, phone, validatedPhone, form]);
+
+  useEffect(() => {
+    async function fetchPrecos() {
+      try {
+        const res = await fetch(`${API_BASE}/tabela-precos`);
+        const data = await res.json();
+        
+        if (data.success && data.tickets) {
+          setIngressos(data.tickets);
+        } else {
+          setError("Não foi possível carregar a tabela de preços.");
+        }
+      } catch (err) {
+        setError("Erro de conexão ao buscar preços.");
+        console.error(err);
+      } finally {
+        setPrecosLoading(false);
+      }
+    }
+
+    fetchPrecos();
+  }, []);
 
   async function handleRequestOtp(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -152,48 +200,50 @@ export default function InscricaoPage() {
     }
   }
 
-  async function handleSubmitForm(e: React.SubmitEvent<HTMLFormElement>) {
+  async function handleSubmitForm(e: React.FormEvent) {
     e.preventDefault();
-    setError("");
     setLoading(true);
+    setError("");
+
     try {
-      const restricoes =
-        form.restricoes_alimentares === "Outro"
-          ? form.restricoes_outro
-          : form.restricoes_alimentares;
-
-      const payload = {
-        nome_completo: form.nome_completo,
-        email: form.email,
-        telefone: toRaw(validatedPhone),
-        nome_familiar: form.nome_familiar,
-        telefone_familiar: toRaw(form.telefone_familiar),
-        idade: Number(form.idade),
-        sexo_biologico: form.sexo_biologico,
-        tipo_ingresso: form.tipo_ingresso,
-        restricoes_alimentares: restricoes,
-        alergias: form.alergias,
-        aceite_termos: form.aceite_termos,
-        cupom: form.cupom,
-      };
-
-      const res = await fetch(`${API_BASE}/ecd2026-form`, {
+      // Certifique-se de que o endpoint "/inscricao" é o correto no seu n8n
+      const res = await fetch(`${API_BASE}/ecd2026-form`, { 
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nome_completo: form.nome_completo,
+          email: form.email,
+          telefone: toE164(validatedPhone), // Envia o telefone validado
+          nome_familiar: form.nome_familiar,
+          telefone_familiar: form.telefone_familiar ? toE164(form.telefone_familiar) : "",
+          idade: form.idade,
+          sexo_biologico: form.sexo_biologico,
+          restricoes_alimentares: form.restricoes_alimentares === "Outras" ? form.restricoes_outro : form.restricoes_alimentares,
+          alergias: form.alergias,
+          aceite_termos: form.aceite_termos,
+          
+          // AS TRÊS VARIÁVEIS CRUCIAIS DA NOVA ARQUITETURA:
+          id_ingresso: form.id_ingresso, 
+          cupom: form.cupom || "", 
+          metodo_pagamento: form.metodo_pagamento 
+        }),
       });
 
       const data = await res.json();
-      console.log("Form Submission Response:", data);
-      if (data.success && data.redirect_to) {
-        clearSession();
-        window.location.href = data.redirect_to;
-        return;
-      }
 
-      setError(data.message || "Erro ao processar inscrição.");
-    } catch {
-      setError("Falha de conexão. Tente novamente.");
+      if (res.ok && data.success) {
+        if (data.redirect_to) {
+          window.location.href = data.redirect_to;
+        } else {
+            window.location.href = "/obrigado-confirmado";        }
+      } else {
+        setError(data.message || "Ocorreu um erro ao processar a inscrição.");
+      }
+    } catch (err) {
+      setError("Erro ao enviar inscrição.");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -246,11 +296,28 @@ export default function InscricaoPage() {
             <MainForm
               form={form}
               phone={validatedPhone}
+              tickets={ingressos}
+              precosLoading={precosLoading}
               loading={loading}
               onChange={(field, value) =>
                 setForm((f) => ({ ...f, [field]: value }))
               }
+              onSubmit={(e) => {
+                e.preventDefault();
+                setStep("payment"); 
+              }}
+            />
+          )}
+
+          {step === "payment" && (
+            <PaymentStep
+              form={form}
+              ingressos={ingressos}
+              cupomState={cupomState}
+              setCupomState={setCupomState}
+              onChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
               onSubmit={handleSubmitForm}
+              loading={loading}
             />
           )}
         </div>
@@ -259,10 +326,155 @@ export default function InscricaoPage() {
   );
 }
 
+function PaymentStep({
+  form,
+  ingressos,
+  cupomState,
+  setCupomState,
+  onChange,
+  onSubmit,
+  loading,
+}: {
+  form: FormData;
+  ingressos: Ticket[];
+  cupomState: CupomState;
+  setCupomState: React.Dispatch<React.SetStateAction<CupomState>>;
+  onChange: (field: keyof FormData, value: string | boolean) => void;
+  onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
+  loading: boolean;
+}) {
+  const [validandoCupom, setValidandoCupom] = useState(false);
+
+  // 1. Encontrar o ingresso selecionado
+  const ingressoSelecionado = ingressos.find((i) => i.id_ingresso === form.id_ingresso);
+
+  // 2. Definir o preço base mediante o método de pagamento
+  let precoBase = 0;
+  if (ingressoSelecionado) {
+    if (form.metodo_pagamento === "pix") precoBase = ingressoSelecionado.valor_pix;
+    else if (form.metodo_pagamento === "cartao") precoBase = ingressoSelecionado.valor_cartao;
+    else precoBase = ingressoSelecionado.valor_pix; // Preço padrão antes de escolher
+  }
+
+  // 3. Calcular desconto visual
+  const valorDesconto = cupomState.valido ? precoBase * (cupomState.desconto / 100) : 0;
+  const precoFinal = precoBase - valorDesconto;
+
+  // 4. Função para validar o cupão no n8n
+  const handleValidarCupom = async () => {
+    if (!form.cupom) return;
+    setValidandoCupom(true);
+    try {
+      const res = await fetch(`${API_BASE}/validar-cupom`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cupom: form.cupom }),
+      });
+      const data = await res.json();
+      
+      if (data.valid && data.success) {
+        setCupomState({ valido: true, desconto: data.amount, mensagem: "Cupom aplicado!" });
+      } else {
+        setCupomState({ valido: false, desconto: 0, mensagem: data.message || "Cupom inválido." });
+        onChange("cupom", "")
+      }
+    } catch (err) {
+      setCupomState({ valido: false, desconto: 0, mensagem: "Erro ao validar cupom." });
+      onChange("cupom", "")
+    } finally {
+      setValidandoCupom(false);
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit} className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+      {/* Resumo do Ingresso */}
+      <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+        <h3 className="text-sm font-semibold text-gray-700 mb-2">Resumo da Inscrição</h3>
+        <p className="text-gray-900 font-medium">
+          {ingressoSelecionado ? ingressoSelecionado.nome_ingresso : "Ingresso não selecionado"}
+        </p>
+      </div>
+
+      {/* Secção de Cupão */}
+      <Field label="Tem um cupom de desconto?">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={form.cupom}
+            onChange={(e) => onChange("cupom", e.target.value.toUpperCase())}
+            placeholder="Ex: LIDERANCA10"
+            className="input font-mono uppercase flex-1"
+            disabled={cupomState.valido === true}
+          />
+          <button
+            type="button"
+            onClick={handleValidarCupom}
+            disabled={!form.cupom || validandoCupom || cupomState.valido === true}
+            className="bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
+          >
+            {validandoCupom ? "A validar..." : cupomState.valido ? "Aplicado" : "Aplicar"}
+          </button>
+        </div>
+        {cupomState.mensagem && (
+          <p className={`text-xs mt-1 font-medium ${cupomState.valido ? "text-green-600" : "text-red-600"}`}>
+            {cupomState.mensagem}
+          </p>
+        )}
+      </Field>
+
+      {/* Escolha do Método de Pagamento */}
+      <Field label="Método de Pagamento">
+        <div className="grid grid-cols-2 gap-3">
+          <label className={`border rounded-xl p-4 cursor-pointer flex flex-col items-center gap-2 transition-all ${form.metodo_pagamento === "pix" ? "border-blue-600 bg-blue-50 ring-1 ring-blue-600" : "border-gray-200 hover:border-gray-300"}`}>
+            <input type="radio" name="pagamento" value="pix" className="sr-only" onChange={() => onChange("metodo_pagamento", "pix")} />
+            <span className="font-semibold text-gray-900">Pix</span>
+            {ingressoSelecionado && (
+              <span className="text-xs text-green-600 font-medium">Mais barato</span>
+            )}
+          </label>
+          
+          <label className={`border rounded-xl p-4 cursor-pointer flex flex-col items-center gap-2 transition-all ${form.metodo_pagamento === "cartao" ? "border-blue-600 bg-blue-50 ring-1 ring-blue-600" : "border-gray-200 hover:border-gray-300"}`}>
+            <input type="radio" name="pagamento" value="cartao" className="sr-only" onChange={() => onChange("metodo_pagamento", "cartao")} />
+            <span className="font-semibold text-gray-900">Cartão</span>
+            {ingressoSelecionado && (
+              <span className="text-xs text-gray-500">Até {ingressoSelecionado.max_parcelas_cartao}x</span>
+            )}
+          </label>
+        </div>
+      </Field>
+
+      {/* Total Visual */}
+      {form.metodo_pagamento && (
+        <div className="flex justify-between items-end py-4 border-t border-gray-100">
+          <span className="text-gray-600 font-medium">Total a pagar:</span>
+          <div className="text-right">
+            {cupomState.valido && (
+              <span className="text-sm text-gray-400 line-through mr-2">
+                R$ {precoBase.toFixed(2)}
+              </span>
+            )}
+            <span className="text-2xl font-bold text-gray-900">
+              R$ {precoFinal.toFixed(2)}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Botão Final */}
+     <SubmitButton 
+        loading={loading} 
+        disabled={!form.metodo_pagamento}
+        label={!form.metodo_pagamento ? "Selecione o pagamento" : "Finalizar Inscrição"} 
+      />
+    </form>
+  );
+}
+
 function StepIndicator({ step }: { step: Step }) {
-  const steps = ["phone", "otp", "form"] as const;
+  const steps = ["phone", "otp", "form","payment"] as const;
   const index = steps.indexOf(step);
-  const labels = ["Telefone", "Código", "Dados"];
+  const labels = ["Telefone", "Código", "Dados","Pagamento"];
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
       {steps.map((s, i) => (
@@ -405,15 +617,20 @@ function MainForm({
   form,
   phone,
   loading,
+  tickets,
+  precosLoading,
   onChange,
   onSubmit,
 }: {
   form: FormData;
   phone: string;
   loading: boolean;
+  tickets: Ticket[];
+  precosLoading:boolean;
   onChange: (field: keyof FormData, value: string | boolean) => void;
   onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
 }) {
+  const ingressoSelecionado = tickets.find((ing) => ing.id_ingresso === form.id_ingresso);
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div>
@@ -485,14 +702,25 @@ function MainForm({
       <Field label="Tipo de ingresso">
         <select
           required
-          value={form.tipo_ingresso}
-          onChange={(e) => onChange("tipo_ingresso", e.target.value)}
+          value={form.id_ingresso}
+          onChange={(e) => onChange("id_ingresso", e.target.value)}
+          disabled={precosLoading}
           className="input"
         >
-          <option value="">Selecionar</option>
-          <option value="encontreiro">Encontreiro</option>
-          <option value="encontrista">Encontrista</option>
+          <option value="">
+            {precosLoading ? "A carregar ingressos..." : "Selecionar"}
+          </option>
+          {tickets.map((ing) => (
+            <option key={ing.id_ingresso} value={ing.id_ingresso}>
+              {ing.nome_ingresso}
+            </option>
+          ))}
         </select>
+        <p className="text-gray-500 text-sm mt-1">
+          {ingressoSelecionado 
+            ? ingressoSelecionado.desc_ingresso 
+            : "Selecione um ingresso para ver os detalhes."}
+        </p>
       </Field>
 
       <div className="border-t border-gray-100 pt-4">
@@ -567,16 +795,6 @@ function MainForm({
         </div>
       </div>
 
-      <Field label="Cupom de desconto (opcional)">
-        <input
-          type="text"
-          value={form.cupom}
-          onChange={(e) => onChange("cupom", e.target.value.toUpperCase())}
-          placeholder="Ex: LIDERANCA100"
-          className="input font-mono tracking-wider"
-        />
-      </Field>
-
       <div className="flex items-start gap-3 pt-1">
         <input
           type="checkbox"
@@ -603,7 +821,7 @@ function MainForm({
         </label>
       </div>
 
-      <SubmitButton loading={loading} label="Finalizar Inscrição" />
+      <SubmitButton loading={loading} label="Ir para Pagamento" />
     </form>
   );
 }
@@ -626,14 +844,16 @@ function Field({
 function SubmitButton({
   loading,
   label,
+  disabled = false,
 }: {
   loading: boolean;
   label: string;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="submit"
-      disabled={loading}
+      disabled={loading || disabled}
       className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-white font-semibold text-sm transition-all hover:bg-blue-700 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed disabled:active:scale-100"
     >
       {loading ? (
