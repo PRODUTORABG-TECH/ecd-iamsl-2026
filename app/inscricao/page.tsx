@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const API_BASE = "https://n8n.produtorabg.com/webhook";
 
@@ -123,8 +123,14 @@ export default function InscricaoPage() {
     if (saved.form) setForm(saved.form);
   }, []);
 
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
-      saveSession({ step, name, phone, validatedPhone, form });
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    saveSession({ step, name, phone, validatedPhone, form });
   }, [step, name, phone, validatedPhone, form]);
 
   useEffect(() => {
