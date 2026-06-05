@@ -315,6 +315,7 @@ export default function InscricaoPage() {
               tickets={ingressos}
               precosLoading={precosLoading}
               loading={loading}
+              onBack={() => setStep("phone")}
               onChange={(field, value) =>
                 setForm((f) => ({ ...f, [field]: value }))
               }
@@ -645,6 +646,7 @@ function MainForm({
   form,
   phone,
   loading,
+  onBack,
   tickets,
   precosLoading,
   onChange,
@@ -654,6 +656,7 @@ function MainForm({
   phone: string;
   loading: boolean;
   tickets: Ticket[];
+  onBack: () => void;
   precosLoading: boolean;
   onChange: (field: keyof FormData, value: string | boolean) => void;
   onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
@@ -849,6 +852,13 @@ function MainForm({
       </div>
 
       <SubmitButton loading={loading} label="Ir para Pagamento" />
+      <button
+        type="button"
+        onClick={onBack}
+        className="w-full text-sm text-gray-400 hover:text-gray-600 transition-colors mt-1"
+      >
+        ← Alterar número
+      </button>
     </form>
   );
 }
