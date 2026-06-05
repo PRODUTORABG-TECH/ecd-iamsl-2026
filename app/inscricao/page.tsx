@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect } from "react";
 
 const API_BASE = "https://n8n.produtorabg.com/webhook";
@@ -25,7 +26,7 @@ interface FormData {
 interface Ticket {
   id_ingresso: string;
   nome_ingresso: string;
-  desc_ingresso:string;
+  desc_ingresso: string;
   valor_cartao: number;
   valor_pix: number;
   max_parcelas_cartao: number;
@@ -66,14 +67,15 @@ function loadSession() {
 
 function saveSession(data: object) {
   try {
+    console.log("Salvando dados")
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
+  } catch { }
 }
 
 function clearSession() {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
-  } catch {}
+  } catch { }
 }
 
 export default function InscricaoPage() {
@@ -105,10 +107,10 @@ export default function InscricaoPage() {
 
   const [ingressos, setIngressos] = useState<Ticket[]>([]);
   const [precosLoading, setPrecosLoading] = useState(true);
-  const [cupomState, setCupomState] = useState<CupomState>({ 
-    valido: null, 
-    desconto: 0, 
-    mensagem: "" 
+  const [cupomState, setCupomState] = useState<CupomState>({
+    valido: null,
+    desconto: 0,
+    mensagem: ""
   });
 
   useEffect(() => {
@@ -122,7 +124,7 @@ export default function InscricaoPage() {
   }, []);
 
   useEffect(() => {
-    saveSession({ step, name, phone, validatedPhone, form });
+      saveSession({ step, name, phone, validatedPhone, form });
   }, [step, name, phone, validatedPhone, form]);
 
   useEffect(() => {
@@ -130,7 +132,7 @@ export default function InscricaoPage() {
       try {
         const res = await fetch(`${API_BASE}/tabela-precos`);
         const data = await res.json();
-        
+
         if (data.success && data.tickets) {
           setIngressos(data.tickets);
         } else {
@@ -151,7 +153,7 @@ export default function InscricaoPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    console.log("handleRequestOtp",phone, name);
+    console.log("handleRequestOtp", phone, name);
     try {
       const res = await fetch(`${API_BASE}/generate-otp`, {
         method: "POST",
@@ -162,7 +164,12 @@ export default function InscricaoPage() {
       console.log("Response:", data);
       if (data.success) {
         setValidatedPhone(phone);
-        setStep("otp");
+        if (data.valid) {
+          setForm((f) => ({ ...f, nome_completo: name }));
+          setStep("form");
+        } else {
+          setStep("otp");
+        }
       } else {
         setError(data.mensagem || "Erro ao enviar código.");
       }
@@ -207,7 +214,7 @@ export default function InscricaoPage() {
 
     try {
       // Certifique-se de que o endpoint "/inscricao" é o correto no seu n8n
-      const res = await fetch(`${API_BASE}/ecd2026-form`, { 
+      const res = await fetch(`${API_BASE}/ecd2026-form`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -223,21 +230,24 @@ export default function InscricaoPage() {
           restricoes_alimentares: form.restricoes_alimentares === "Outras" ? form.restricoes_outro : form.restricoes_alimentares,
           alergias: form.alergias,
           aceite_termos: form.aceite_termos,
-          
+
           // AS TRÊS VARIÁVEIS CRUCIAIS DA NOVA ARQUITETURA:
-          id_ingresso: form.id_ingresso, 
-          cupom: form.cupom || "", 
-          metodo_pagamento: form.metodo_pagamento 
+          id_ingresso: form.id_ingresso,
+          cupom: form.cupom || "",
+          metodo_pagamento: form.metodo_pagamento
         }),
       });
 
       const data = await res.json();
 
       if (res.ok && data.success) {
+          clearSession()
+
         if (data.redirect_to) {
           window.location.href = data.redirect_to;
         } else {
-            window.location.href = "/obrigado-confirmado";        }
+          window.location.href = "/obrigado-confirmado";
+        }
       } else {
         setError(data.message || "Ocorreu um erro ao processar a inscrição.");
       }
@@ -304,7 +314,7 @@ export default function InscricaoPage() {
               }
               onSubmit={(e) => {
                 e.preventDefault();
-                setStep("payment"); 
+                setStep("payment");
               }}
             />
           )}
@@ -317,6 +327,7 @@ export default function InscricaoPage() {
               setCupomState={setCupomState}
               onChange={(field, value) => setForm((f) => ({ ...f, [field]: value }))}
               onSubmit={handleSubmitForm}
+              onBack={() => setStep("form")}
               loading={loading}
             />
           )}
@@ -333,6 +344,7 @@ function PaymentStep({
   setCupomState,
   onChange,
   onSubmit,
+  onBack,
   loading,
 }: {
   form: FormData;
@@ -341,6 +353,7 @@ function PaymentStep({
   setCupomState: React.Dispatch<React.SetStateAction<CupomState>>;
   onChange: (field: keyof FormData, value: string | boolean) => void;
   onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
+  onBack: () => void;
   loading: boolean;
 }) {
   const [validandoCupom, setValidandoCupom] = useState(false);
@@ -371,7 +384,7 @@ function PaymentStep({
         body: JSON.stringify({ cupom: form.cupom }),
       });
       const data = await res.json();
-      
+
       if (data.valid && data.success) {
         setCupomState({ valido: true, desconto: data.amount, mensagem: "Cupom aplicado!" });
       } else {
@@ -433,7 +446,7 @@ function PaymentStep({
               <span className="text-xs text-green-600 font-medium">Mais barato</span>
             )}
           </label>
-          
+
           <label className={`border rounded-xl p-4 cursor-pointer flex flex-col items-center gap-2 transition-all ${form.metodo_pagamento === "cartao" ? "border-blue-600 bg-blue-50 ring-1 ring-blue-600" : "border-gray-200 hover:border-gray-300"}`}>
             <input type="radio" name="pagamento" value="cartao" className="sr-only" onChange={() => onChange("metodo_pagamento", "cartao")} />
             <span className="font-semibold text-gray-900">Cartão</span>
@@ -462,44 +475,53 @@ function PaymentStep({
       )}
 
       {/* Botão Final */}
-     <SubmitButton 
-        loading={loading} 
-        disabled={!form.metodo_pagamento}
-        label={!form.metodo_pagamento ? "Selecione o pagamento" : "Finalizar Inscrição"} 
-      />
+      <div className="flex flex-col gap-3 pt-2">
+        <SubmitButton
+          loading={loading}
+          disabled={!form.metodo_pagamento}
+          label={!form.metodo_pagamento ? "Selecione o pagamento" : "Finalizar Inscrição"}
+        />
+
+        {/* NOVO BOTÃO DE VOLTAR */}
+        <button
+          type="button"
+          disabled={loading}
+          onClick={onBack}
+          className="w-full text-sm text-gray-500 hover:text-gray-800 transition-colors py-2 font-medium"
+        >
+          ← Voltar para editar dados
+        </button>
+      </div>
     </form>
   );
 }
 
 function StepIndicator({ step }: { step: Step }) {
-  const steps = ["phone", "otp", "form","payment"] as const;
+  const steps = ["phone", "otp", "form", "payment"] as const;
   const index = steps.indexOf(step);
-  const labels = ["Telefone", "Código", "Dados","Pagamento"];
+  const labels = ["Telefone", "Código", "Dados", "Pagamento"];
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
       {steps.map((s, i) => (
         <div key={s} className="flex items-center gap-2">
           <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
-              i <= index
+            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${i <= index
                 ? "bg-[#f8ba88] text-white"
                 : "bg-[#a46c40] text-white"
-            }`}
+              }`}
           >
             {i < index ? "✓" : i + 1}
           </div>
           <span
-            className={`text-xs hidden sm:block ${
-              i <= index ? "text-black" : "text-black"
-            }`}
+            className={`text-xs hidden sm:block ${i <= index ? "text-black" : "text-black"
+              }`}
           >
             {labels[i]}
           </span>
           {i < steps.length - 1 && (
             <div
-              className={`w-6 h-px mx-1 ${
-                i < index ? "bg-[#f8ba88]" : "bg-[#f8ba88]"
-              }`}
+              className={`w-6 h-px mx-1 ${i < index ? "bg-[#f8ba88]" : "bg-[#f8ba88]"
+                }`}
             />
           )}
         </div>
@@ -626,7 +648,7 @@ function MainForm({
   phone: string;
   loading: boolean;
   tickets: Ticket[];
-  precosLoading:boolean;
+  precosLoading: boolean;
   onChange: (field: keyof FormData, value: string | boolean) => void;
   onSubmit: (e: React.SubmitEvent<HTMLFormElement>) => void;
 }) {
@@ -717,15 +739,15 @@ function MainForm({
           ))}
         </select>
         <p className="text-gray-500 text-sm mt-1">
-          {ingressoSelecionado 
-            ? ingressoSelecionado.desc_ingresso 
+          {ingressoSelecionado
+            ? ingressoSelecionado.desc_ingresso
             : "Selecione um ingresso para ver os detalhes."}
         </p>
       </Field>
 
       <div className="border-t border-gray-100 pt-4">
         <p className="text-sm font-semibold text-gray-600 mb-3">
-          Familiar / Acompanhante
+          Familiar / Contao Emergência
         </p>
         <div className="space-y-4">
           <Field label="Nome do familiar">
@@ -809,14 +831,13 @@ function MainForm({
           className="text-sm text-gray-600 cursor-pointer leading-snug"
         >
           Li e concordo com os{" "}
-          <a
+          <Link
             href="/termos"
-            target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
           >
             termos e condições
-          </a>{" "}
+          </Link>{" "}
           do evento.
         </label>
       </div>

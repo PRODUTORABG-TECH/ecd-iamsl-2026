@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Termos e Condições — Encontro com Deus 2025",
+  title: "Termos e Condições — Encontro com Deus 2026",
 };
 
 export default function TermosPage() {
@@ -17,7 +17,7 @@ export default function TermosPage() {
             Termos e Condições de Uso
           </h1>
           <p className="text-sm text-gray-500 mt-1">
-            Encontro com Deus 2025
+            Encontro com Deus 2026
           </p>
         </header>
 
@@ -37,7 +37,7 @@ export default function TermosPage() {
               profundidade tudo o que será ministrado nos dias do Encontro com Deus.
             </li>
             <li>
-              <strong>Encontro:</strong> Retiro no sítio informado.
+              <strong>Encontro:</strong> Retiro no Sítio Touza - Farias - Linhares/ES.
             </li>
             <li>
               <strong>Pós-encontro:</strong> É um tempo de consolidação. Após viver dias tão
@@ -49,57 +49,52 @@ export default function TermosPage() {
           <p className="mt-3 font-semibold text-gray-700">17 a 19 de julho</p>
         </Section>
 
+        {/* NOVA SEÇÃO ADICIONADA AQUI */}
+        <Section title="Entendendo os Termos">
+          <ul className="space-y-2">
+            <li className="flex gap-2">
+              <span className="text-blue-500 font-bold shrink-0">•</span>
+              <span><strong>Encontrista:</strong> É a pessoa que vai ao encontro pela primeira vez, para receber e vivenciar toda a experiência.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-blue-500 font-bold shrink-0">•</span>
+              <span><strong>Encontreiro:</strong> É a pessoa que faz parte da equipe de trabalho e vai para servir durante os dias do encontro.</span>
+            </li>
+          </ul>
+        </Section>
+
         <Section title="Programação">
           <ul className="space-y-3">
             <ScheduleItem
               label="Pré-encontro"
               note="participação obrigatória"
-              detail="12 de agosto, às 19h30"
+              detail="14 de julho, às 19h30"
               location="Igreja Monte Sião Linhares"
             />
             <ScheduleItem
               label="Saída da Igreja"
-              detail="15 de agosto, 18h"
+              detail="17 de julho, 18h"
               location="Igreja Monte Sião Linhares"
             />
             <ScheduleItem
               label="Retiro — Encontro com Deus"
-              detail="15 a 17 de agosto"
-              location="Sítio Touza"
+              detail="17 a 19 de julho"
+              location="Sítio Touza - Farias - Linhares/ES"
               extra="Retornaremos no domingo para o culto de recepção na Igreja Monte Sião Linhares."
             />
             <ScheduleItem
               label="Recepção"
-              detail="17 de agosto, 18h"
+              detail="19 de julho, 18h"
               location="Igreja Monte Sião Linhares"
               extra="Ao retornarem do Encontro com Deus, os encontristas são recebidos pela igreja e por seus familiares em um culto ao Senhor para celebrar as bênçãos recebidas. É um momento especial para testemunhar, compartilhar da unção recebida e glorificar ao Senhor por tudo o que foi vivido."
             />
             <ScheduleItem
               label="Pós-encontro"
               note="participação obrigatória"
-              detail="19 de agosto, às 19h30"
+              detail="21 de julho, às 19h30"
               location="Igreja Monte Sião Linhares"
             />
           </ul>
-        </Section>
-
-        <Section title="Investimento">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <PriceCard
-              role="Encontrista"
-              description="Quem vai para receber"
-              total="R$ 380,00"
-              entry="Entrada de R$ 100,00 no ato da inscrição"
-              remainder="Restante até 31 de julho de 2025"
-            />
-            <PriceCard
-              role="Encontreiro"
-              description="Quem vai para trabalhar"
-              total="R$ 220,00"
-              entry="Entrada de R$ 70,00 no ato da inscrição"
-              remainder="Restante até 31 de julho de 2025"
-            />
-          </div>
         </Section>
 
         <Section title="Requisitos">
@@ -117,21 +112,33 @@ export default function TermosPage() {
           </ul>
         </Section>
 
+        <Section title="Informações Importantes">
+          <ul className="space-y-2">
+            <li className="flex gap-2">
+              <span className="text-blue-500 font-bold shrink-0">•</span>
+              <span><strong>Transporte:</strong> Todos os encontristas vão em um ônibus, disponibilizado pela organização, para o local do encontro.</span>
+            </li>
+            <li className="flex gap-2">
+              <span className="text-blue-500 font-bold shrink-0">•</span>
+              <span><strong>Uso de Celulares:</strong> O uso de celulares é expressamente proibido durante o evento.</span>
+            </li>
+          </ul>
+        </Section>
+
         <Section title="Pagamento">
           <p>
             O pagamento deve ser feito via site de inscrições, podendo ser realizado via{" "}
-            <strong>Pix</strong>, <strong>boleto</strong> ou{" "}
-            <strong>cartão de crédito</strong> dividido em até <strong>4x</strong>.
+            <strong>Pix</strong> ou <strong>cartão de crédito</strong> dividido em até <strong>4x</strong>.
           </p>
           <p className="mt-3 text-sm text-gray-500">
             Dúvidas? Entre em contato com a comunicação:{" "}
             <a
-              href="https://wa.me/5527995280013"
+              href="https://wa.me/5527996984294"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-600 underline underline-offset-2 hover:text-blue-700"
             >
-              +55 27 99528-0013
+              Camila
             </a>
           </p>
         </Section>
@@ -139,14 +146,14 @@ export default function TermosPage() {
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 leading-relaxed">
           <p className="font-bold mb-1">⚠ Atenção</p>
           <p>
-            Sua inscrição só será registrada mediante pagamento da entrada. Em caso de desistência,
-            os valores pagos <strong>não serão ressarcidos</strong>.
+            Sua inscrição só será confirmada quando o pagamento for aprovado. Em caso de desistência,
+            os valores <strong>não são devolvidos</strong>.
           </p>
         </div>
 
         <div className="pt-2 text-center">
           <Link
-            href="/inscricao"
+            href="/"
             className="inline-block rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-700 active:scale-[0.98]"
           >
             Voltar para a inscrição
@@ -210,22 +217,16 @@ function PriceCard({
   role,
   description,
   total,
-  entry,
-  remainder,
 }: {
   role: string;
   description: string;
   total: string;
-  entry: string;
-  remainder: string;
 }) {
   return (
     <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 space-y-1">
       <p className="font-bold text-gray-800">{role}</p>
       <p className="text-xs text-gray-500">{description}</p>
       <p className="text-lg font-extrabold text-blue-600 mt-1">{total}</p>
-      <p className="text-xs text-gray-600">{entry}</p>
-      <p className="text-xs text-gray-600">{remainder}</p>
     </div>
   );
 }
