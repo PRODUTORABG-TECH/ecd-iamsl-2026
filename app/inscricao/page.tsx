@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 
 const API_BASE = "https://n8n.produtorabg.com/webhook";
 
-type Step = "phone" | "otp" | "form" | "payment";
+type Step = "notice" | "phone" | "otp" | "form";
 
 interface FormData {
   nome_completo: string;
@@ -79,7 +79,7 @@ function clearSession() {
 }
 
 export default function InscricaoPage() {
-  const [step, setStep] = useState<Step>("phone");
+  const [step, setStep] = useState<Step>("notice");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -240,7 +240,8 @@ export default function InscricaoPage() {
           // AS TRÊS VARIÁVEIS CRUCIAIS DA NOVA ARQUITETURA:
           id_ingresso: form.id_ingresso,
           cupom: form.cupom || "",
-          metodo_pagamento: form.metodo_pagamento
+          metodo_pagamento: "reserva"
+          // metodo_pagamento: form.metodo_pagamento
         }),
       });
 
@@ -271,7 +272,7 @@ export default function InscricaoPage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-black">Encontro com Deus 2026</h1>
           <p className="text-black mt-1 text-sm">Igreja Monte Sião Linhares</p>
-          <StepIndicator step={step} />
+          {step !== "notice" && <StepIndicator step={step} />}
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
@@ -280,6 +281,10 @@ export default function InscricaoPage() {
               <span className="mt-0.5 shrink-0">⚠</span>
               <span>{error}</span>
             </div>
+          )}
+
+          {step === "notice" && (
+            <NoticeStep onContinue={() => setStep("phone")} />
           )}
 
           {step === "phone" && (
@@ -321,12 +326,12 @@ export default function InscricaoPage() {
               }
               onSubmit={(e) => {
                 e.preventDefault();
-                setStep("payment");
+                handleSubmitForm(e);
               }}
             />
           )}
 
-          {step === "payment" && (
+          {/* {step === "payment" && (
             <PaymentStep
               form={form}
               ingressos={ingressos}
@@ -337,7 +342,7 @@ export default function InscricaoPage() {
               onBack={() => setStep("form")}
               loading={loading}
             />
-          )}
+          )} */}
         </div>
       </div>
     </div>
@@ -503,10 +508,10 @@ function PaymentStep({
   );
 }
 
-function StepIndicator({ step }: { step: Step }) {
-  const steps = ["phone", "otp", "form", "payment"] as const;
+function StepIndicator({ step }: { step: Exclude<Step, "notice"> }) {
+  const steps = ["phone", "otp", "form"] as const;
   const index = steps.indexOf(step);
-  const labels = ["Telefone", "Código", "Dados", "Pagamento"];
+  const labels = ["Telefone", "Código", "Dados"];
   return (
     <div className="flex items-center justify-center gap-2 mt-4">
       {steps.map((s, i) => (
@@ -533,6 +538,35 @@ function StepIndicator({ step }: { step: Step }) {
           )}
         </div>
       ))}
+    </div>
+  );
+}
+
+function NoticeStep({ onContinue }: { onContinue: () => void }) {
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-gray-800">Encontro Suspenso</h2>
+        <p className="text-gray-500 text-sm mt-3 leading-relaxed">
+          Infelizmente, precisamos cancelar o nosso Encontro com Deus. Não
+          tivemos inscrições suficientes e, por isso, vamos suspender o
+          encontro por enquanto. Manteremos uma lista de interessados e,
+          dependendo de como ela evoluir, remarcaremos o evento e
+          divulgaremos uma nova data em breve.
+        </p>
+        <p className="text-gray-500 text-sm mt-3 leading-relaxed">
+          Você ainda pode reservar a sua vaga para o encontro, entraremos em
+          contato quando tivermos mais informações.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        onClick={onContinue}
+        className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-6 py-3.5 text-white font-semibold text-sm transition-all hover:bg-blue-700 active:scale-[0.98]"
+      >
+        Fazer reserva
+      </button>
     </div>
   );
 }
